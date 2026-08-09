@@ -6,6 +6,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\StorefrontController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -13,6 +14,8 @@ Route::middleware('guest')->group(function () {
     Route::post('/login', [AuthController::class, 'store'])->name('login.store');
 });
 Route::post('/logout', [AuthController::class, 'destroy'])->middleware('auth')->name('logout');
+Route::get('/shop', [StorefrontController::class, 'index'])->name('shop');
+Route::post('/shop/orders', [StorefrontController::class, 'store'])->name('shop.orders.store');
 
 Route::middleware('auth')->group(function () {
     Route::get('/', [PosController::class, 'index'])->name('pos');
