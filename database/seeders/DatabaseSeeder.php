@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use App\Models\Product;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -16,6 +17,7 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        User::updateOrCreate(['email' => 'admin@neerra.com'], ['name' => 'Neerra Admin', 'password' => Hash::make('Neerra@123')]);
         Product::upsert([
             ['name' => 'Fresh Milk', 'size' => '1.9 Litre', 'category' => 'Milk', 'price' => 390, 'stock' => 100, 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
             ['name' => 'Fresh Milk', 'size' => '1 Litre', 'category' => 'Milk', 'price' => 210, 'stock' => 100, 'is_active' => true, 'created_at' => now(), 'updated_at' => now()],
