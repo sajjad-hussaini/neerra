@@ -1,5 +1,5 @@
 @extends('backend.layout.layout')
-@section('title', 'Sales Report · Noor Dairy')
+@section('title', 'Sales Report · Neerra')
 @section('content')
 <div class="page-head"><div><h1>Sales Report</h1><p>Revenue and products sold for your selected period.</p></div></div><form class="date-filter" method="get"><label>From<input type="date" name="from" value="{{ $from->toDateString() }}"></label><label>To<input type="date" name="to" value="{{ $to->toDateString() }}"></label><button class="primary">Apply report</button></form>
 <section class="stats report-stats"><div class="stat"><small>REVENUE</small><strong>Rs. {{ number_format($summary['revenue']) }}</strong></div><div class="stat"><small>ORDERS</small><strong>{{ number_format($summary['orders']) }}</strong></div><div class="stat"><small>AVERAGE ORDER</small><strong>Rs. {{ number_format($summary['average']) }}</strong></div></section>

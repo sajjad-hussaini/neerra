@@ -32,7 +32,7 @@ class PosController extends Controller
                 $lineTotal = $product->price * $item['quantity'];
                 $total += $lineTotal; $lines[] = compact('product', 'item', 'lineTotal');
             }
-            $sale = Sale::create(['invoice_number' => 'NDR-'.now()->format('Ymd-His').'-'.random_int(100, 999), 'payment_method' => $data['payment_method'], 'total' => $total, 'sold_at' => now()]);
+            $sale = Sale::create(['invoice_number' => 'NRR-'.now()->format('Ymd-His').'-'.random_int(100, 999), 'payment_method' => $data['payment_method'], 'total' => $total, 'sold_at' => now()]);
             foreach ($lines as $line) {
                 $sale->items()->create(['product_id' => $line['product']->id, 'quantity' => $line['item']['quantity'], 'unit_price' => $line['product']->price, 'line_total' => $line['lineTotal']]);
                 $line['product']->decrement('stock', $line['item']['quantity']);

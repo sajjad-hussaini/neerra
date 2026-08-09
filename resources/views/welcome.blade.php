@@ -1,5 +1,5 @@
 @extends('backend.layout.layout')
-@section('title', 'Point of Sale · Noor Dairy')
+@section('title', 'Point of Sale · Neerra')
 @section('content')
 <div class="page-head"><div><h1>Point of Sale</h1><p>Build a new order and collect payment.</p></div><div class="date" id="today"></div></div>
 <section class="stats"><div class="stat"><small>TODAY'S SALES</small><strong id="dailySales">Rs. 0</strong></div><div class="stat"><small>ORDERS TODAY</small><strong id="orderCount">0</strong></div><div class="stat"><small>THIS MONTH</small><strong id="monthSales">Rs. 0</strong></div><div class="stat"><small>THIS YEAR</small><strong id="yearSales">Rs. 0</strong></div></section>

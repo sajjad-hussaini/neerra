@@ -9,4 +9,5 @@ class Product extends Model
     protected $fillable = ['name', 'size', 'category', 'price', 'stock', 'is_active'];
     protected function casts(): array { return ['is_active' => 'boolean']; }
     public function saleItems() { return $this->hasMany(SaleItem::class); }
+    public function purchaseItems() { return $this->hasMany(PurchaseItem::class); }
 }

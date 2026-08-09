@@ -1,5 +1,5 @@
 @extends('backend.layout.layout')
-@section('title', ($product->exists ? 'Edit' : 'Add').' Product · Noor Dairy')
+@section('title', ($product->exists ? 'Edit' : 'Add').' Product · Neerra')
 @section('content')
 <div class="page-head"><div><h1>{{ $product->exists ? 'Edit product' : 'Add product' }}</h1><p>Set product details and inventory.</p></div><a class="button-light" href="{{ route('products.index') }}">← Back</a></div>
 <form class="form-card" method="post" action="{{ $product->exists ? route('products.update',$product) : route('products.store') }}">@csrf @if($product->exists) @method('PUT') @endif

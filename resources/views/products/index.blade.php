@@ -1,5 +1,5 @@
 @extends('backend.layout.layout')
-@section('title', 'Products · Noor Dairy')
+@section('title', 'Products · Neerra')
 @section('content')
 <div class="page-head"><div><h1>Products</h1><p>Manage prices, inventory and availability.</p></div><a class="primary" href="{{ route('products.create') }}">+ Add product</a></div>
 <form class="filter" method="get"><input name="search" value="{{ request('search') }}" placeholder="Search name or category"><button>Search</button></form>
