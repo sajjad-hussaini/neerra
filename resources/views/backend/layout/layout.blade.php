@@ -11,12 +11,17 @@
     <link
         href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="{{ asset('css/pos.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/pos.css') }}?v={{ filemtime(public_path('css/pos.css')) }}">
 </head>
 
 <body>
+    <header class="mobile-bar">
+        <button class="menu-toggle" type="button" aria-label="Open menu" aria-controls="sidebar" aria-expanded="false"><span></span><span></span><span></span></button>
+        <a class="mobile-brand" href="{{ route('pos') }}"><b>NR</b><span>Neerra</span></a>
+    </header>
     <div class="shell">
-        <aside class="sidebar"><a class="brand" href="{{ route('pos') }}"><b>NR</b><span>Neerra</span></a>
+        <div class="sidebar-overlay" hidden></div>
+        <aside class="sidebar" id="sidebar"><a class="brand" href="{{ route('pos') }}"><b>NR</b><span>Neerra</span></a>
             <p class="side-label">MAIN MENU</p>
             <nav class="nav"><a class="{{ request()->routeIs('pos') ? 'active' : '' }}"
                     href="{{ route('pos') }}">POS <span>Point of Sale</span></a><a
@@ -37,7 +42,7 @@
             @endif @yield('content')
         </main>
     </div>
-    <script src="{{ asset('js/app-ui.js') }}"></script>@stack('scripts')
+    <script src="{{ asset('js/app-ui.js') }}?v={{ filemtime(public_path('js/app-ui.js')) }}"></script>@stack('scripts')
 </body>
 
 </html>
