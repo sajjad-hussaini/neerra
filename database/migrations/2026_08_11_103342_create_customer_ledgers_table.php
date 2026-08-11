@@ -16,8 +16,8 @@ return new class extends Migration
             $table->foreignId('customer_id')->constrained();
             $table->enum('type', ['sale', 'payment', 'adjustment']);
             $table->foreignId('sale_id')->nullable()->constrained();
-            $table->decimal('debit', 12, 2)->default(0);   // customer par charha (sale/udhar)
-            $table->decimal('credit', 12, 2)->default(0);  // customer ne wapas kiya (payment)
+            $table->decimal('debit', 12, 2)->default(0);   
+            $table->decimal('credit', 12, 2)->default(0); 
             $table->decimal('balance_after', 12, 2);
             $table->string('description')->nullable();
             $table->timestamp('transaction_date');

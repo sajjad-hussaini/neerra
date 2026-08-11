@@ -1,37 +1,68 @@
 @extends('backend.layout.layout')
-@section('title', 'Purchase & Stock · Neerra')
+@section('title', 'Customers · Neerra')
 @section('content')
     <div class="page-head">
         <div>
-            <h1>Purchase & Stock</h1>
-            <p>Add purchases to increase product stock.</p>
-        </div><a class="primary" href="{{ route('purchases.create') }}">+ New purchase</a>
+            <h1>Customers</h1>
+            <p>{{ $customers->total() }} total</p>
+        </div>
+        <button class="primary" onclick="document.getElementById('add-customer-modal').classList.add('open')">
+            + Add Customer
+        </button>
     </div>
+
     <div class="table-card">
         <table>
             <thead>
                 <tr>
-                    <th>Reference</th>
-                    <th>Supplier</th>
-                    <th>Purchase date</th>
-                    <th>Items</th>
-                    <th class="right">Total cost</th>
+                    <th>Name</th>
+                    <th>Phone</th>
+                    <th class="right">Total Udhar</th>
+                    <th class="right">Total Paid</th>
+                    <th class="right">Balance</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
-                @forelse($purchases as $purchase)
+                @forelse($customers as $customer)
                     <tr>
-                        <td><strong>{{ $purchase->reference_number }}</strong></td>
-                        <td>{{ $purchase->supplier ?: '—' }}</td>
-                        <td>{{ $purchase->purchased_at->format('d M Y') }}</td>
-                        <td>{{ $purchase->items_count }}</td>
-                        <td class="right">Rs. {{ number_format($purchase->total) }}</td>
-                </tr>@empty<tr>
-                        <td colspan="5" class="empty">No purchases added yet.</td>
+                        <td>{{ $customer->name }}</td>
+                        <td>{{ $customer->phone ?: '—' }}</td>
+                        <td class="right">Rs. {{ number_format($customer->total_credit ?? 0) }}</td>
+                        <td class="right">Rs. {{ number_format($customer->total_debit ?? 0) }}</td>
+                        <td class="right">
+                            <strong class="{{ $customer->currentBalance() > 0 ? 'text-danger' : '' }}">
+                                Rs. {{ number_format($customer->currentBalance()) }}
+                            </strong>
+                        </td>
+                        <td class="right">
+                            <a class="button-light" href="{{ route('customers.show', $customer) }}">View</a>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="6" class="empty">No customers yet.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
-    <div class="pagination">{{ $purchases->links() }}</div>
+
+    <div class="pagination">{{ $customers->links() }}</div>
+
+    <div id="add-customer-modal" class="modal">
+        <div class="modal-box">
+            <h2>Add Customer</h2>
+            <form method="post" action="{{ route('customers.store') }}">
+                @csrf
+                <div class="form-grid">
+                    <label>Name<input name="name" required></label>
+                    <label>Phone<input name="phone"></label>
+                    <label>Address<input name="address"></label>
+                    <label>Opening balance<input type="number" step="0.01" name="opening_balance" value="0"></label>
+                </div>
+                <button class="primary">Save</button>
+            </form>
+        </div>
+    </div>
 @endsection

@@ -35,7 +35,10 @@ Route::middleware('auth')->group(function () {
     Route::resource('suppliers', SupplierController::class);
     Route::post('suppliers/{supplier}/payment', [SupplierController::class, 'makePayment'])->name('suppliers.payment');
 
-    Route::resource('customers', CustomerController::class);
-    Route::post('customers/{customer}/payment', [CustomerController::class, 'makePayment'])->name('customers.payment');
+    Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
+    Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+    Route::post('customers', [CustomerController::class, 'store'])->name('customers.store');
+    Route::post('customers/{customer}/credit', [CustomerController::class, 'storeCredit'])->name('customers.credit');
+    Route::post('customers/{customer}/payment', [CustomerController::class, 'storePayment'])->name('customers.payment');
 
 });
