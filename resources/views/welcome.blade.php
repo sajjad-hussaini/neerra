@@ -28,12 +28,37 @@
             <div class="cart-top">
                 <h2>Current Order</h2><span class="pill" id="cartCount">0 items</span>
             </div>
+            <div class="customer-bar">
+                <label class="customer-select">
+                    <span>Customer</span>
+                    <select id="customerSelect">
+                        <option value="">Walk-in (cash)</option>
+                        @foreach ($customers as $c)
+                            <option value="{{ $c->id }}">{{ $c->name }}{{ $c->phone ? ' · ' . $c->phone : '' }}</option>
+                        @endforeach
+                    </select>
+                </label>
+                <button type="button" class="button-light" id="newCustomerBtn">+ New</button>
+            </div>
+            <div class="new-customer" id="newCustomerForm" hidden>
+                <input id="newCustomerName" placeholder="Customer name" autocomplete="off">
+                <input id="newCustomerPhone" placeholder="Phone (optional)" autocomplete="off">
+                <div class="new-customer-actions">
+                    <button type="button" class="primary" id="saveCustomerBtn">Save</button>
+                    <button type="button" class="clear" id="cancelCustomerBtn">Cancel</button>
+                </div>
+            </div>
             <div class="order-items" id="orderItems">
                 <div class="empty">Your cart is empty.<br>Add products to start a sale.</div>
             </div>
             <div class="summary">
                 <div><span>Subtotal</span><span id="subtotal">Rs. 0</span></div>
                 <div class="total"><span>Total</span><span id="total">Rs. 0</span></div>
+                <div class="paid-row" id="paidRow" hidden>
+                    <span>Paid now</span>
+                    <span class="paid-input">Rs. <input type="number" id="paidAmount" min="0" step="1" inputmode="numeric"></span>
+                </div>
+                <div class="due-row" id="dueRow" hidden><span>Udhaar (Due)</span><span id="dueAmount">Rs. 0</span></div>
                 <div class="pay-methods"><button class="method selected" data-method="Cash">Cash</button><button
                         class="method" data-method="Card">Card</button><button class="method"
                         data-method="Online">Online</button></div><button class="primary full" id="checkout"
@@ -47,8 +72,10 @@
     <script>
         window.posConfig = {
             products: @json($products),
+            customers: @json($customers),
             storeUrl: '{{ route('sales.store') }}',
-            statsUrl: '{{ route('sales.stats') }}'
+            statsUrl: '{{ route('sales.stats') }}',
+            customerStoreUrl: '{{ route('customers.store') }}'
         };
     </script>
     <script src="{{ asset('js/pos.js') }}"></script>

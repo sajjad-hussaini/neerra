@@ -12,8 +12,8 @@ class CustomerController extends Controller
 {
     public function index()
     {
-        $customers = Customer::withSum('ledgers as total_credit', 'credit')
-            ->withSum('ledgers as total_debit', 'debit')
+        $customers = Customer::withSum('ledgers as total_udhar', 'debit')
+            ->withSum('ledgers as total_paid', 'credit')
             ->orderBy('name')
             ->paginate(20);
 
@@ -27,10 +27,10 @@ class CustomerController extends Controller
             ->orderBy('id')
             ->paginate(20);
 
-        $totalCredit = $customer->ledgers()->sum('credit'); // total udhar diya
-        $totalDebit  = $customer->ledgers()->sum('debit');  // total wapis liya
+        $totalUdhar = $customer->ledgers()->sum('debit');  // total sale/udhaar diya (customer par charha)
+        $totalPaid  = $customer->ledgers()->sum('credit'); // total wapis mila (payments)
 
-        return view('customer.show', compact('customer', 'ledgers', 'totalCredit', 'totalDebit'));
+        return view('customer.show', compact('customer', 'ledgers', 'totalUdhar', 'totalPaid'));
     }
 
     public function storeCredit(Request $request, Customer $customer)
@@ -92,7 +92,11 @@ class CustomerController extends Controller
 
         $data['opening_balance'] = $data['opening_balance'] ?? 0;
 
-        Customer::create($data);
+        $customer = Customer::create($data);
+
+        if ($request->expectsJson()) {
+            return response()->json($customer->only('id', 'name', 'phone'), 201);
+        }
 
         return back()->with('success', 'Customer add ho gaya.');
     }

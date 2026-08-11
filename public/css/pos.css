@@ -1061,3 +1061,166 @@ tfoot td {
         padding: 27px
     }
 }
+
+/* POS: customer bar + editable cart lines + paid/udhaar */
+.customer-bar {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    margin: 14px 0 4px
+}
+
+.customer-select {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted)
+}
+
+.customer-select select {
+    width: 100%;
+    padding: 9px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--ink);
+    font-weight: 600
+}
+
+.customer-bar .button-light {
+    white-space: nowrap;
+    padding: 9px 12px
+}
+
+.new-customer {
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+    margin: 10px 0 4px;
+    background: #f7faf9;
+    border: 1px solid var(--line);
+    border-radius: 10px
+}
+
+.new-customer input {
+    padding: 9px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff
+}
+
+.new-customer-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center
+}
+
+.new-customer-actions .primary {
+    flex: 1;
+    padding: 9px
+}
+
+.new-customer-actions .clear {
+    margin: 0
+}
+
+.item-main {
+    min-width: 0
+}
+
+.item-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px
+}
+
+.unit-price,
+.item-amount,
+.paid-input {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600
+}
+
+.item-amount {
+    color: var(--ink);
+    font-weight: 700
+}
+
+.price-input,
+.amount-input,
+.qty-input {
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 4px 6px;
+    text-align: right;
+    background: #fff;
+    color: var(--ink);
+    font-weight: 700
+}
+
+.price-input {
+    width: 62px
+}
+
+.amount-input {
+    width: 78px
+}
+
+.qty-input {
+    width: 40px;
+    text-align: center
+}
+
+.qty-input::-webkit-outer-spin-button,
+.qty-input::-webkit-inner-spin-button,
+.price-input::-webkit-outer-spin-button,
+.price-input::-webkit-inner-spin-button,
+.amount-input::-webkit-outer-spin-button,
+.amount-input::-webkit-inner-spin-button,
+.paid-input input::-webkit-outer-spin-button,
+.paid-input input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0
+}
+
+.qty-input,
+.price-input,
+.amount-input,
+.paid-input input {
+    -moz-appearance: textfield;
+    appearance: textfield
+}
+
+.paid-row,
+.due-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #6b7d87;
+    margin-bottom: 11px
+}
+
+.paid-input input {
+    width: 90px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 5px 7px;
+    text-align: right;
+    background: #fff;
+    color: var(--ink);
+    font-weight: 700
+}
+
+.due-row {
+    font-weight: 700;
+    color: var(--danger)
+}

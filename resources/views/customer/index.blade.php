@@ -28,8 +28,8 @@
                     <tr>
                         <td>{{ $customer->name }}</td>
                         <td>{{ $customer->phone ?: '—' }}</td>
-                        <td class="right">Rs. {{ number_format($customer->total_credit ?? 0) }}</td>
-                        <td class="right">Rs. {{ number_format($customer->total_debit ?? 0) }}</td>
+                        <td class="right">Rs. {{ number_format($customer->total_udhar ?? 0) }}</td>
+                        <td class="right">Rs. {{ number_format($customer->total_paid ?? 0) }}</td>
                         <td class="right">
                             <strong class="{{ $customer->currentBalance() > 0 ? 'text-danger' : '' }}">
                                 Rs. {{ number_format($customer->currentBalance()) }}

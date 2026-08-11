@@ -15,7 +15,7 @@
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <div class="text-muted small">Total Udhar</div>
-                        <div class="fs-4 fw-bold">Rs. {{ number_format($totalCredit) }}</div>
+                        <div class="fs-4 fw-bold">Rs. {{ number_format($totalUdhar) }}</div>
                     </div>
                 </div>
             </div>
@@ -23,7 +23,7 @@
                 <div class="card shadow-sm">
                     <div class="card-body">
                         <div class="text-muted small">Total Paid</div>
-                        <div class="fs-4 fw-bold">Rs. {{ number_format($totalDebit) }}</div>
+                        <div class="fs-4 fw-bold">Rs. {{ number_format($totalPaid) }}</div>
                     </div>
                 </div>
             </div>
@@ -95,8 +95,8 @@
                     <th>Date</th>
                     <th>Type</th>
                     <th>Description</th>
-                    <th class="right">Udhar (Credit)</th>
-                    <th class="right">Paid (Debit)</th>
+                    <th class="right">Udhar</th>
+                    <th class="right">Paid</th>
                     <th class="right">Balance</th>
                 </tr>
             </thead>
@@ -106,8 +106,8 @@
                         <td>{{ $entry->transaction_date->format('d M Y') }}</td>
                         <td>{{ ucfirst($entry->type) }}</td>
                         <td>{{ $entry->description ?: '—' }}</td>
-                        <td class="right">{{ $entry->credit ? 'Rs. ' . number_format($entry->credit) : '—' }}</td>
                         <td class="right">{{ $entry->debit ? 'Rs. ' . number_format($entry->debit) : '—' }}</td>
+                        <td class="right">{{ $entry->credit ? 'Rs. ' . number_format($entry->credit) : '—' }}</td>
                         <td class="right">Rs. {{ number_format($entry->balance_after) }}</td>
                     </tr>
                 @empty
