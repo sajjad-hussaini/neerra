@@ -37,6 +37,9 @@ class PosController extends Controller
                 $sale->items()->create(['product_id' => $line['product']->id, 'quantity' => $line['item']['quantity'], 'unit_price' => $line['product']->price, 'line_total' => $line['lineTotal']]);
                 $line['product']->decrement('stock', $line['item']['quantity']);
             }
+
+            $this->customerLedgerService->recordSale($sale);
+            
             return $sale;
         });
         return response()->json(['message' => 'Sale saved successfully.', 'invoice_number' => $sale->invoice_number, 'total' => $sale->total], 201);

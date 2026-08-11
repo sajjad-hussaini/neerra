@@ -1,12 +1,14 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\PurchaseController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SaleController;
 use App\Http\Controllers\StorefrontController;
+use App\Http\Controllers\SupplierController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
@@ -28,4 +30,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
     Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
     Route::get('/sales-report', [ReportController::class, 'index'])->name('reports.sales');
+
+    Route::apiResource('suppliers', SupplierController::class);
+    Route::get('suppliers/{supplier}/ledger', [SupplierController::class, 'ledger']);
+    Route::post('suppliers/{supplier}/payment', [SupplierController::class, 'makePayment']);
+
+    Route::apiResource('customers', CustomerController::class);
+    Route::get('customers/{customer}/ledger', [CustomerController::class, 'ledger']);
+    Route::post('customers/{customer}/payment', [CustomerController::class, 'makePayment']);
 });
