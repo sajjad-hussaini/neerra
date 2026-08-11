@@ -6,7 +6,10 @@ use Illuminate\Database\Eloquent\Model;
 
 class Purchase extends Model
 {
-    protected $fillable = ['reference_number', 'supplier', 'total', 'purchased_at'];
+    protected $fillable = ['reference_number', 'supplier_id', 'total', 'purchased_at', 'paid_amount', 'due_amount'];
+
+    protected $table = 'purchases';
+
     protected function casts(): array
     {
         return ['purchased_at' => 'datetime'];
@@ -16,9 +19,9 @@ class Purchase extends Model
         return $this->hasMany(PurchaseItem::class);
     }
 
-    public function supplier()
+    public function suppliers()
     {
-        return $this->belongsTo(Supplier::class);
+        return $this->belongsTo(Supplier::class, 'supplier_id', 'id');
     }
     
     public function ledgers()

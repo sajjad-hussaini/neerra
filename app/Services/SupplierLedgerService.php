@@ -66,4 +66,9 @@ class SupplierLedgerService
             'transaction_date' => $date ?? now(),
         ]);
     }
+
+    public function getAllSuppliers()
+    {
+        return Supplier::orderBy('name')->get();
+    }
 }

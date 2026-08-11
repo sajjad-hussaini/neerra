@@ -4,11 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use App\Models\Sale;
+use App\Services\CustomerLedgerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class PosController extends Controller
 {
+    public function __construct(protected CustomerLedgerService $customerLedgerService) {}
+    
     public function index()
     {
         $products = Product::where('is_active', true)->orderBy('category')->orderBy('name')->get();
@@ -39,7 +42,7 @@ class PosController extends Controller
             }
 
             $this->customerLedgerService->recordSale($sale);
-            
+
             return $sale;
         });
         return response()->json(['message' => 'Sale saved successfully.', 'invoice_number' => $sale->invoice_number, 'total' => $sale->total], 201);

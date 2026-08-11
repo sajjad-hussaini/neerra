@@ -16,18 +16,23 @@
                     <th>Purchase date</th>
                     <th>Items</th>
                     <th class="right">Total cost</th>
+                    <th class="right">Due</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
                 @forelse($purchases as $purchase)
+                
                     <tr>
                         <td><strong>{{ $purchase->reference_number }}</strong></td>
-                        <td>{{ $purchase->supplier ?: '—' }}</td>
+                        <td>{{ $purchase->suppliers?->name ?: '—' }}</td>
                         <td>{{ $purchase->purchased_at->format('d M Y') }}</td>
                         <td>{{ $purchase->items_count }}</td>
                         <td class="right">Rs. {{ number_format($purchase->total) }}</td>
+                        <td class="right">Rs. {{ number_format($purchase->due_amount) }}</td>
+                        <td><a class="text-link" href="{{ route('purchases.show', $purchase) }}">View →</a></td>
                 </tr>@empty<tr>
-                        <td colspan="5" class="empty">No purchases added yet.</td>
+                        <td colspan="6" class="empty">No purchases added yet.</td>
                     </tr>
                 @endforelse
             </tbody>

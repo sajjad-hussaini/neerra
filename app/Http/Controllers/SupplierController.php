@@ -2,41 +2,51 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\SupplierRequest;
-use App\Http\Resources\SupplierLedgerResource;
-use App\Http\Resources\SupplierResource;
 use App\Models\Supplier;
 use App\Services\SupplierLedgerService;
 use Illuminate\Http\Request;
 
-// app/Http/Controllers/SupplierController.php
 class SupplierController extends Controller
 {
-    public function __construct(protected SupplierLedgerService $ledgerService) {}
+    public function __construct(private SupplierLedgerService $ledgerService) {}
 
     public function index()
     {
-        $suppliers = Supplier::withCount('purchases')->get();
-        return SupplierResource::collection($suppliers);
+        $suppliers = Supplier::withCount('purchases')->latest()->paginate(20);
+        return view('suppliers.index', compact('suppliers'));
     }
 
-    public function store(SupplierRequest $request)
+    public function create()
     {
-        $supplier = Supplier::create($request->validated());
-        return new SupplierResource($supplier);
+        return view('suppliers.create');
     }
 
-    public function ledger(Supplier $supplier)
+    public function store(Request $request)
     {
-        $entries = $supplier->ledgers()->latest('transaction_date')->paginate(20);
-        return SupplierLedgerResource::collection($entries)
-            ->additional(['meta' => ['current_balance' => $supplier->currentBalance()]]);
+        $request->validate([
+            'name'            => 'required|string|max:255',
+            'phone'           => 'nullable|string|max:20',
+            'address'         => 'nullable|string|max:255',
+            'opening_balance' => 'nullable|numeric|min:0',
+        ]);
+
+        Supplier::create($request->all());
+
+        return redirect()->route('suppliers.index')->with('success', 'Supplier added.');
+    }
+
+    public function show(Supplier $supplier)
+    {
+        $ledgers = $supplier->ledgers()->paginate(20);
+        return view('suppliers.show', compact('supplier', 'ledgers'));
     }
 
     public function makePayment(Request $request, Supplier $supplier)
     {
         $request->validate(['amount' => 'required|numeric|min:0.01', 'note' => 'nullable|string']);
+
         $this->ledgerService->recordPayment($supplier, $request->amount, $request->note);
-        return response()->json(['balance' => $supplier->currentBalance()]);
+
+        return back()->with('success', 'Payment recorded.');
     }
 }

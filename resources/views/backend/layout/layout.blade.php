@@ -12,6 +12,7 @@
         href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('css/pos.css') }}?v={{ filemtime(public_path('css/pos.css')) }}">
+    @yield('css')
 </head>
 
 <body>
@@ -23,22 +24,29 @@
         <div class="sidebar-overlay" hidden></div>
         <aside class="sidebar" id="sidebar"><a class="brand" href="{{ route('pos') }}"><b>NR</b><span>Neerra</span></a>
             <p class="side-label">MAIN MENU</p>
-            <nav class="nav"><a class="{{ request()->routeIs('pos') ? 'active' : '' }}"
-                    href="{{ route('pos') }}">POS <span>Point of Sale</span></a><a
-                    class="{{ request()->routeIs('orders.*') ? 'active' : '' }}" href="{{ route('orders.index') }}">ORD
+            <nav class="nav">
+                <a class="{{ request()->routeIs('pos') ? 'active' : '' }}"
+                    href="{{ route('pos') }}">POS <span>Point of Sale</span>
+                </a><a class="{{ request()->routeIs('orders.*') ? 'active' : '' }}" href="{{ route('orders.index') }}">ORD
                     <span>Orders</span></a><a class="{{ request()->routeIs('products.*') ? 'active' : '' }}"
-                    href="{{ route('products.index') }}">PRD <span>Products</span></a><a
-                    class="{{ request()->routeIs('purchases.*') ? 'active' : '' }}"
-                    href="{{ route('purchases.index') }}">STK <span>Purchase & Stock</span></a><a
-                    class="{{ request()->routeIs('reports.*') ? 'active' : '' }}"
-                    href="{{ route('reports.sales') }}">REP <span>Sales Report</span></a></nav>
+                    href="{{ route('products.index') }}">PRD <span>Products</span>
+                </a><a class="{{ request()->routeIs('purchases.*') ? 'active' : '' }}"
+                    href="{{ route('purchases.index') }}">STK <span>Purchase & Stock</span>
+                </a><a class="{{ request()->routeIs('reports.*') ? 'active' : '' }}"
+                    href="{{ route('reports.sales') }}">REP <span>Sales Report</span>
+                </a><a class="{{ request()->routeIs('suppliers.*') ? 'active' : '' }}" href="{{ route('suppliers.index') }}">SUP
+                    <span>Suppliers</span>
+                </a><a class="{{ request()->routeIs('customers.*') ? 'active' : '' }}" href="{{ route('customers.index') }}">CUS
+                    <span>Customers</span>
+                </a>
+            </nav>
             <div class="shop-card"><strong>{{ auth()->user()->name }}</strong>Signed in as admin<form method="post"
                     action="{{ route('logout') }}">@csrf<button class="logout" type="submit">Sign out</button></form>
             </div>
         </aside>
         <main class="content">
             @if (session('success'))
-                <div class="flash">{{ session('success') }}</div>
+            <div class="flash">{{ session('success') }}</div>
             @endif @yield('content')
         </main>
     </div>

@@ -29,13 +29,13 @@ Route::middleware('auth')->group(function () {
     Route::get('/purchases', [PurchaseController::class, 'index'])->name('purchases.index');
     Route::get('/purchases/create', [PurchaseController::class, 'create'])->name('purchases.create');
     Route::post('/purchases', [PurchaseController::class, 'store'])->name('purchases.store');
+    Route::get('/purchases/{purchase}', [PurchaseController::class, 'show'])->name('purchases.show');
     Route::get('/sales-report', [ReportController::class, 'index'])->name('reports.sales');
 
-    Route::apiResource('suppliers', SupplierController::class);
-    Route::get('suppliers/{supplier}/ledger', [SupplierController::class, 'ledger']);
-    Route::post('suppliers/{supplier}/payment', [SupplierController::class, 'makePayment']);
+    Route::resource('suppliers', SupplierController::class);
+    Route::post('suppliers/{supplier}/payment', [SupplierController::class, 'makePayment'])->name('suppliers.payment');
 
-    Route::apiResource('customers', CustomerController::class);
-    Route::get('customers/{customer}/ledger', [CustomerController::class, 'ledger']);
-    Route::post('customers/{customer}/payment', [CustomerController::class, 'makePayment']);
+    Route::resource('customers', CustomerController::class);
+    Route::post('customers/{customer}/payment', [CustomerController::class, 'makePayment'])->name('customers.payment');
+
 });
