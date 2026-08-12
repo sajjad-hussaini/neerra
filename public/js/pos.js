@@ -23,6 +23,10 @@
             return Number.isFinite(n) && n > 0 ? n : 0;
         },
         csrf = () => document.querySelector("meta[name=csrf-token]").content;
+    const qty2dp = (v) => {
+            const n = Number(v);
+            return Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : 0;
+        };
     const icon = (p) =>
         p.category.toLowerCase() === "water" ? "&#128167;" : "&#129371;";
     const escape = (value) =>
@@ -113,14 +117,20 @@
             setInput(id, "total", line.lineTotal);
         } else if (act === "total") {
             line.lineTotal = int(raw);
-            line.unitPrice =
-                line.qty > 0 ? Math.round(line.lineTotal / line.qty) : line.lineTotal;
-            setInput(id, "price", line.unitPrice);
+            line.qty = line.unitPrice > 0
+                ? Math.round((line.lineTotal / line.unitPrice) * 100) / 100   // 2 decimal tak
+                : line.qty;
+            if (p.stock && line.qty > p.stock) {
+                line.qty = p.stock;
+                line.lineTotal = Math.round(line.qty * line.unitPrice);
+                setInput(id, "total", line.lineTotal);
+            }
+            setInput(id, "qty", line.qty);
         } else if (act === "qty") {
-            let q = Math.max(1, int(raw) || 1);
+            let q = qty2dp(raw) || 0.01;
             if (q > p.stock) q = p.stock;
             line.qty = q;
-            line.lineTotal = line.qty * line.unitPrice;
+            line.lineTotal = Math.round(line.qty * line.unitPrice);
             setInput(id, "total", line.lineTotal);
         }
         patchTotals();

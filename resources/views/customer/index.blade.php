@@ -35,9 +35,7 @@
                                 Rs. {{ number_format($customer->currentBalance()) }}
                             </strong>
                         </td>
-                        <td class="right">
-                            <a class="button-light" href="{{ route('customers.show', $customer) }}">View</a>
-                        </td>
+                        <td><a class="text-link"  href="{{ route('customers.show', $customer) }}">View →</a></td>
                     </tr>
                 @empty
                     <tr>
