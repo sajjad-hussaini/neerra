@@ -20,6 +20,11 @@ class CustomerController extends Controller
         return view('customer.index', compact('customers'));
     }
 
+    public function create()
+    {
+        return view('customer.create');
+    }
+
     public function show(Customer $customer)
     {
         $ledgers = $customer->ledgers()
@@ -98,6 +103,7 @@ class CustomerController extends Controller
             return response()->json($customer->only('id', 'name', 'phone'), 201);
         }
 
-        return back()->with('success', 'Customer add ho gaya.');
-    }
+        return redirect()->route('customers.index')
+            ->with('success', 'Customer added successfully.');
+            }
 }

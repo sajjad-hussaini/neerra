@@ -60,7 +60,12 @@ class PosController extends Controller
                 'sold_at' => now(),
             ]);
             foreach ($lines as $line) {
-                $sale->items()->create(['product_id' => $line['product']->id, 'quantity' => $line['item']['quantity'], 'unit_price' => $line['item']['unit_price'], 'line_total' => $line['lineTotal']]);
+                $sale->items()->create([
+                    'product_id' => $line['product']->id,
+                    'quantity' => $line['item']['quantity'],
+                    'unit_price' => $line['item']['unit_price'],
+                    'line_total' => $line['lineTotal']
+                ]);
                 $line['product']->decrement('stock', $line['item']['quantity']);
             }
 

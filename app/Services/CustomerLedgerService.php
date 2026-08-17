@@ -6,7 +6,6 @@ use App\Models\Customer;
 use App\Models\CustomerLedger;
 use App\Models\Sale;
 
-// app/Services/CustomerLedgerService.php — same logic, ulta sign (sale = debit, payment = credit)
 class CustomerLedgerService
 {
     public function recordSale(Sale $sale): void

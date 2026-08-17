@@ -1224,3 +1224,17 @@ tfoot td {
     font-weight: 700;
     color: var(--danger)
 }
+    .pagination svg {
+    width: 20px !important;
+    height: 20px !important;
+}
+
+.pagination {
+    display: flex;
+    align-items: center;
+}
+
+.pagination svg {
+    display: inline-block;
+    vertical-align: middle;
+}

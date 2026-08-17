@@ -27,7 +27,15 @@
                     <tr>
                         <td><strong>{{ $sale->invoice_number }}</strong><small>{{ $sale->payment_method }}</small></td>
                         <td><span class="status info">{{ $sale->channel ?? 'POS' }}</span></td>
-                        <td>{{ $sale->customer_name ?: 'Walk-in customer' }}</td>
+                        <td>
+                            @if ($sale->customer?->name)
+                                <a href="{{ route('customers.show', $sale->customer) }}">
+                                    {{ $sale->customer->name }}
+                                </a>
+                            @else
+                                Walk-in customer
+                            @endif
+                        </td>
                         <td>{{ $sale->sold_at->format('d M Y, h:i A') }}</td>
                         <td><span
                                 class="status {{ ($sale->status ?? 'Completed') === 'Pending' ? 'muted' : 'success' }}">{{ $sale->status ?? 'Completed' }}</span>

@@ -6,9 +6,11 @@
             <h1>Customers</h1>
             <p>{{ $customers->total() }} total</p>
         </div>
-        <button class="primary" onclick="document.getElementById('add-customer-modal').classList.add('open')">
-            + Add Customer
-        </button>
+        <a href="{{ route('customers.create') }}">
+            <button class="primary">
+                + Add Customer
+            </button>
+        </a>
     </div>
 
     <div class="table-card">
