@@ -48,7 +48,7 @@ class PosController extends Controller
                 : $total;
             $paid = max(0, min($paid, $total));
             $due = $total - $paid;
-            abort_if($due > 0 && ! $customerId, 422, 'Udhaar ke liye customer select karein.');
+            abort_if($due > 0 && ! $customerId, 422, 'Select a customer for Udhar.');
 
             $sale = Sale::create([
                 'invoice_number' => 'NRR-'.now()->format('Ymd-His').'-'.random_int(100, 999),
