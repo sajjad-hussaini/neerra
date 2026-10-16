@@ -6,10 +6,9 @@
     .form-grid label span {
         display: block;
     }
-     .form-grid select,
+    .form-grid select,
     .supplier-field input {
         width: 100%;
-        height: 50%;
     }
 </style>
 @endsection

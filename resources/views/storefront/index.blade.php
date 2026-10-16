@@ -14,11 +14,13 @@
         rel="stylesheet">
     <link rel="stylesheet"
         href="{{ asset('css/storefront.css') }}?v={{ filemtime(public_path('css/storefront.css')) }}">
+    <link rel="stylesheet"
+        href="{{ asset('css/storefront-theme.css') }}?v={{ filemtime(public_path('css/storefront-theme.css')) }}">
 </head>
 
 <body>
     <nav class="navbar navbar-expand-lg navbar-light py-3 sticky-top">
-        <div class="container"><a class="navbar-brand" href="#top"><span>NR</span> Neerra</a><button
+        <div class="container"><a class="navbar-brand" href="#top"><span>N</span> Neerra</a><button
                 class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#nav"><span
                     class="navbar-toggler-icon"></span></button>
             <div class="collapse navbar-collapse" id="nav">
@@ -39,7 +41,8 @@
                         <p class="badge-copy">FRESHNESS DELIVERED TO YOU</p>
                         <h1>Everyday essentials, <em>fresh</em> at your door.</h1>
                         <p class="lead">Order fresh milk and mineral water online. Simple checkout, dependable
-                            delivery.</p><a href="#products" class="btn hero-button">Shop now</a>
+                            delivery.</p><a href="#products" class="btn hero-button">Explore products <span aria-hidden="true">&rarr;</span></a>
+                        <div class="hero-points"><span>Fresh everyday essentials</span><span>Easy online ordering</span></div>
                     </div>
                     <div class="col-lg-6">
                         <div class="hero-art">
