@@ -3,6 +3,7 @@
     if (!config) return;
     const products = config.products.map((p) => ({
         ...p,
+        id: Number(p.id),
         price: Number(p.price),
         stock: Number(p.stock),
     }));
@@ -27,8 +28,17 @@
             const n = Number(v);
             return Number.isFinite(n) && n > 0 ? Math.round(n * 100) / 100 : 0;
         };
-    const icon = (p) =>
-        p.category.toLowerCase() === "water" ? "&#128167;" : "&#129371;";
+    const icon = (p) => {
+        const category = String(p.category || "").toLowerCase();
+        if (/biscuit|cookie/.test(category)) return "&#127850;";
+        if (/cake|bakery/.test(category)) return "&#127856;";
+        if (/bread/.test(category)) return "&#127838;";
+        if (/snack|chips/.test(category)) return "&#127871;";
+        if (/drink|juice|beverage/.test(category)) return "&#129475;";
+        if (/water/.test(category)) return "&#128167;";
+        if (/milk|dairy/.test(category)) return "&#129371;";
+        return "&#128230;";
+    };
     const escape = (value) =>
         String(value).replace(
             /[&<>"']/g,
@@ -43,7 +53,7 @@
         );
 
     const cartEntries = () => products.filter((p) => cart[p.id]);
-    const sumQty = () => cartEntries().reduce((a, p) => a + cart[p.id].qty, 0);
+    const sumQty = () => qty2dp(cartEntries().reduce((a, p) => a + cart[p.id].qty, 0));
     const sumTotal = () =>
         cartEntries().reduce((a, p) => a + cart[p.id].lineTotal, 0);
 
@@ -56,14 +66,14 @@
                 )
                 .map(
                     (p) =>
-                        `<button class="product" onclick="posAdd(${p.id})" ${p.stock < 1 ? "disabled" : ""}><div class="product-icon">${icon(p)}</div><h3>${escape(p.name)}</h3><small>${escape(p.size)} / ${p.stock} in stock</small><div class="product-price"><span>${money(p.price)}</span><span class="add">+</span></div></button>`,
+                        `<button class="product" onclick="posAdd(${p.id})" ${p.stock <= 0 ? "disabled" : ""}><div class="product-icon">${icon(p)}</div><h3>${escape(p.name)}</h3><small>${escape(p.size)} / ${p.stock} in stock</small><div class="product-price"><span>${money(p.price)}</span><span class="add">+</span></div></button>`,
                 )
                 .join("") || '<p class="empty">No product found.</p>';
     }
 
     function lineHTML(p) {
         const line = cart[p.id];
-        return `<div class="item" data-line="${p.id}"><div class="item-icon">${icon(p)}</div><div class="item-main"><div class="item-name">${escape(p.name)}</div><small>${escape(p.size)}</small><div class="item-controls"><span class="unit-price">Rs.<input class="price-input" type="number" min="0" step="1" inputmode="numeric" value="${line.unitPrice}" data-act="price" data-id="${p.id}"></span><div class="qty"><button type="button" data-act="dec" data-id="${p.id}">-</button><input class="qty-input" type="number" min="1" step="1" inputmode="numeric" value="${line.qty}" data-act="qty" data-id="${p.id}"><button type="button" data-act="inc" data-id="${p.id}">+</button></div></div></div><div class="item-amount">Rs.<input class="amount-input" type="number" min="0" step="1" inputmode="numeric" value="${line.lineTotal}" data-act="total" data-id="${p.id}"></div></div>`;
+        return `<div class="item" data-line="${p.id}"><div class="item-icon">${icon(p)}</div><div class="item-main"><div class="item-name">${escape(p.name)}</div><small>${escape(p.size)}</small><div class="item-controls"><span class="unit-price">Rate: ${money(line.unitPrice)}</span><div class="qty"><button type="button" data-act="dec" data-id="${p.id}">-</button><input class="qty-input" type="number" min="0.01" max="${p.stock}" step="0.01" inputmode="decimal" aria-label="Quantity" value="${line.qty}" data-act="qty" data-id="${p.id}"><button type="button" data-act="inc" data-id="${p.id}">+</button></div></div></div><div class="item-amount">Price Rs.<input class="amount-input" aria-label="Total price" title="Enter amount to calculate quantity at the product rate" type="number" min="0" step="1" inputmode="numeric" value="${line.lineTotal}" data-act="total" data-id="${p.id}" ${line.unitPrice <= 0 ? "readonly" : ""}></div></div>`;
     }
 
     function renderCart() {
@@ -80,7 +90,7 @@
         $("cartCount").textContent = `${count} item${count === 1 ? "" : "s"}`;
         $("subtotal").textContent = money(total);
         $("total").textContent = money(total);
-        $("checkout").disabled = !count;
+        $("checkout").disabled = !count || cartEntries().some((p) => cart[p.id].qty <= 0);
         const hasCustomer = !!customerId;
         $("paidRow").hidden = !hasCustomer;
         $("dueRow").hidden = !hasCustomer;
@@ -111,16 +121,10 @@
         const line = cart[id];
         if (!line) return;
         const p = products.find((x) => x.id === id);
-        if (act === "price") {
-            line.unitPrice = int(raw);
-            line.lineTotal = line.qty * line.unitPrice;
-            setInput(id, "total", line.lineTotal);
-        } else if (act === "total") {
+        if (act === "total" && line.unitPrice > 0) {
             line.lineTotal = int(raw);
-            line.qty = line.unitPrice > 0
-                ? Math.round((line.lineTotal / line.unitPrice) * 100) / 100   // 2 decimal tak
-                : line.qty;
-            if (p.stock && line.qty > p.stock) {
+            line.qty = qty2dp(line.lineTotal / line.unitPrice);
+            if (line.qty > p.stock || line.lineTotal > Math.round(p.stock * line.unitPrice)) {
                 line.qty = p.stock;
                 line.lineTotal = Math.round(line.qty * line.unitPrice);
                 setInput(id, "total", line.lineTotal);
@@ -140,7 +144,7 @@
         const line = cart[id];
         if (!line) return;
         const p = products.find((x) => x.id === id);
-        const q = line.qty + delta;
+        const q = qty2dp(Math.min(p.stock, line.qty + delta));
         if (q <= 0) {
             delete cart[id];
             renderCart();
@@ -148,20 +152,21 @@
         }
         if (q > p.stock) return;
         line.qty = q;
-        line.lineTotal = line.qty * line.unitPrice;
+        line.lineTotal = Math.round(line.qty * line.unitPrice);
         renderCart();
     }
 
     window.posAdd = (id) => {
         const p = products.find((p) => p.id === id);
-        if (!p) return;
+        if (!p || p.stock <= 0) return;
         const line = cart[id];
         if (line) {
             if (line.qty >= p.stock) return;
-            line.qty += 1;
-            line.lineTotal = line.qty * line.unitPrice;
+            line.qty = qty2dp(Math.min(p.stock, line.qty + 1));
+            line.lineTotal = Math.round(line.qty * line.unitPrice);
         } else {
-            cart[id] = { qty: 1, unitPrice: p.price, lineTotal: p.price };
+            const qty = Math.min(1, p.stock);
+            cart[id] = { qty, unitPrice: p.price, lineTotal: Math.round(qty * p.price) };
         }
         renderCart();
     };
@@ -339,8 +344,12 @@
             }),
                 data = await r.json();
             if (!r.ok) throw Error(data.message || "Sale could not be saved.");
+            receiptLines.forEach(({ product, qty }) => {
+                product.stock = qty2dp(product.stock - qty);
+            });
             cart = {};
             resetAfterSale();
+            renderProducts($("search").value);
             renderCart();
             stats();
             printReceipt(

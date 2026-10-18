@@ -20,7 +20,11 @@
                 <div>
                     <h2>Products</h2>
                     <p>Choose an item to add it to the order.</p>
-                </div><a class="text-link" href="{{ route('products.index') }}">Manage products →</a>
+                </div>
+                <div class="pos-product-actions">
+                    <a class="button-light" href="{{ route('products.create') }}">+ Add product</a>
+                    <a class="text-link" href="{{ route('products.index') }}">Manage products</a>
+                </div>
             </div><label class="search">⌕<input id="search" type="search" placeholder="Search products..."></label>
             <div class="products" id="products"></div>
         </section>
@@ -78,5 +82,5 @@
             customerStoreUrl: '{{ route('customers.store') }}'
         };
     </script>
-    <script src="{{ asset('js/pos.js') }}"></script>
+    <script src="{{ asset('js/pos.js') }}?v={{ filemtime(public_path('js/pos.js')) }}"></script>
 @endpush

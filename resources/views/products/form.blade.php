@@ -4,7 +4,7 @@
 <div class="page-head">
     <div>
         <h1>{{ $product->exists ? 'Edit product' : 'Add product' }}</h1>
-        <p>Set product details and inventory.</p>
+        <p>Add milk, water, biscuits, cakes or any other product with its price and stock.</p>
     </div><a class="button-light" href="{{ route('products.index') }}">← Back</a>
 </div>
 <form class="form-card" method="post"
@@ -13,8 +13,8 @@
     @endif
     <div class="form-grid"><label>Product name<input name="name" value="{{ old('name', $product->name) }}"
                 required></label><label>Size / unit<input name="size" value="{{ old('size', $product->size) }}"
-                placeholder="e.g. 1 Litre" required></label><label>Category<input name="category"
-                value="{{ old('category', $product->category) }}" placeholder="Milk, Water..."
+                placeholder="e.g. 1 Litre, 1 Pack, 1 Piece, 1 kg" required></label><label>Category<input name="category" list="productCategories"
+                value="{{ old('category', $product->category) }}" placeholder="Choose or type a category"
                 required></label><label>Price (Rs.)<input type="number" min="1" name="price"
                 value="{{ old('price', $product->price) }}" required></label><label>Available stock<input type="number"
                 min="0" name="stock" value="{{ old('stock', $product->stock ?? 0) }}" required></label><label
@@ -23,6 +23,16 @@
     @if ($errors->any())
     <div class="errors">{{ $errors->first() }}</div>
     @endif
+    <datalist id="productCategories">
+        <option value="Milk"></option>
+        <option value="Water"></option>
+        <option value="Biscuits"></option>
+        <option value="Cakes"></option>
+        <option value="Bread"></option>
+        <option value="Snacks"></option>
+        <option value="Drinks"></option>
+        <option value="Grocery"></option>
+    </datalist>
     <button class="primary">{{ $product->exists ? 'Save changes' : 'Create product' }}</button>
 </form>
 @endsection
