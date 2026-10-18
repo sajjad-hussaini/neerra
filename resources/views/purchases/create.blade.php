@@ -55,5 +55,5 @@
     <script>
         window.purchaseProducts = @json($products);
     </script>
-    <script src="{{ asset('js/purchases.js') }}"></script>
+    <script src="{{ asset('js/purchases.js') }}?v={{ filemtime(public_path('js/purchases.js')) }}"></script>
 @endpush

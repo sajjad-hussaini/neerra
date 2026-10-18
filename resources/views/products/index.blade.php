@@ -28,6 +28,15 @@
                         <td>{{ $product->category }}</td>
                         <td>Rs. {{ number_format($product->price) }}</td>
                         <td><span class="{{ $product->stock < 10 ? 'low-stock' : '' }}">{{ $product->stock }} units</span>
+                            @if($product->isBiscuit())
+                                @if($product->price_stocks === null)
+                                    <small>Set stock by price in Edit</small>
+                                @else
+                                    @foreach(\App\Models\Product::BISCUIT_PRICES as $price)
+                                        <small>Rs. {{ $price }}: {{ $product->price_stocks[$price] ?? 0 }} pcs</small>
+                                    @endforeach
+                                @endif
+                            @endif
                         </td>
                         <td><span
                                 class="status {{ $product->is_active ? 'success' : 'muted' }}">{{ $product->is_active ? 'Active' : 'Inactive' }}</span>

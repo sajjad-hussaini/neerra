@@ -22,10 +22,17 @@ class StorefrontController extends Controller
             'items' => ['required', 'array', 'min:1'], 'items.*.product_id' => ['required', 'integer', 'exists:products,id'], 'items.*.quantity' => ['required', 'integer', 'min:1', 'max:100'],
         ]);
         $sale = DB::transaction(function () use ($data) {
-            $total = 0; $lines = [];
-            foreach ($data['items'] as $item) { $product = Product::lockForUpdate()->findOrFail($item['product_id']); abort_if(! $product->is_active || $product->stock < $item['quantity'], 422, "{$product->name} is currently out of stock."); $lineTotal = $product->price * $item['quantity']; $total += $lineTotal; $lines[] = compact('product', 'item', 'lineTotal'); }
+            $total = 0; $lines = []; $reserved = []; $lockedProducts = [];
+            foreach ($data['items'] as $item) {
+                $product = $lockedProducts[$item['product_id']] ??= Product::lockForUpdate()->findOrFail($item['product_id']);
+                $reserved[$product->id] = ($reserved[$product->id] ?? 0) + $item['quantity'];
+                abort_if(! $product->is_active || $product->stockForPrice((int) $product->price) < $reserved[$product->id], 422, "$product->name is currently out of stock.");
+                $lineTotal = $product->price * $item['quantity'];
+                $total += $lineTotal;
+                $lines[] = compact('product', 'item', 'lineTotal');
+            }
             $sale = Sale::create(['invoice_number' => 'ONL-'.now()->format('Ymd-His').'-'.random_int(100, 999), 'payment_method' => $data['payment_method'], 'channel' => 'Online', 'customer_name' => $data['customer_name'], 'customer_phone' => $data['customer_phone'], 'delivery_address' => $data['delivery_address'], 'status' => 'Pending', 'total' => $total, 'sold_at' => now()]);
-            foreach ($lines as $line) { $sale->items()->create(['product_id' => $line['product']->id, 'quantity' => $line['item']['quantity'], 'unit_price' => $line['product']->price, 'line_total' => $line['lineTotal']]); $line['product']->decrement('stock', $line['item']['quantity']); }
+            foreach ($lines as $line) { $sale->items()->create(['product_id' => $line['product']->id, 'quantity' => $line['item']['quantity'], 'unit_price' => $line['product']->price, 'line_total' => $line['lineTotal']]); $line['product']->changeStock(-$line['item']['quantity'], (int) $line['product']->price); }
             return $sale;
         });
         return response()->json(['message' => 'Your order has been placed.', 'order_number' => $sale->invoice_number], 201);

@@ -34,11 +34,19 @@ class PosController extends Controller
         ]);
 
         $sale = DB::transaction(function () use ($data) {
-            $total = 0; $lines = [];
+            $total = 0; $lines = []; $reserved = []; $lockedProducts = [];
             foreach ($data['items'] as $item) {
-                $product = Product::lockForUpdate()->findOrFail($item['product_id']);
-                abort_if(! $product->is_active || $product->stock < $item['quantity'], 422, "{$product->name} ({$product->size}) does not have enough stock.");
-                $lineTotal = $item['line_total'];
+                $product = $lockedProducts[$item['product_id']] ??= Product::lockForUpdate()->findOrFail($item['product_id']);
+                $isBiscuit = $product->isBiscuit();
+                if ($isBiscuit) {
+                    abort_if(! in_array((int) $item['unit_price'], Product::BISCUIT_PRICES, true)
+                        || floor((float) $item['quantity']) != $item['quantity'], 422, 'Choose a valid biscuit price and whole quantity.');
+                }
+                $stockKey = $product->id.($isBiscuit ? '-'.$item['unit_price'] : '');
+                $reserved[$stockKey] = round(($reserved[$stockKey] ?? 0) + $item['quantity'], 2);
+                $label = $product->name.($isBiscuit ? ' Rs. '.$item['unit_price'] : ' ('.$product->size.')');
+                abort_if(! $product->is_active || $product->stockForPrice((int) $item['unit_price']) < $reserved[$stockKey], 422, "$label does not have enough stock.");
+                $lineTotal = $isBiscuit ? (int) $item['quantity'] * (int) $item['unit_price'] : $item['line_total'];
                 $total += $lineTotal; $lines[] = compact('product', 'item', 'lineTotal');
             }
 
@@ -66,7 +74,7 @@ class PosController extends Controller
                     'unit_price' => $line['item']['unit_price'],
                     'line_total' => $line['lineTotal']
                 ]);
-                $line['product']->decrement('stock', $line['item']['quantity']);
+                $line['product']->changeStock(-$line['item']['quantity'], (int) $line['item']['unit_price']);
             }
 
             $this->customerLedgerService->recordSale($sale);

@@ -12,11 +12,12 @@
         name: c.name,
         phone: c.phone,
     }));
-    // cart[id] = { qty, unitPrice, lineTotal }
+    // Cart keys separate price options for the same product.
     let cart = {},
         payment = "Cash",
         customerId = "",
-        paidTouched = false;
+        paidTouched = false,
+        selectedBiscuitId = null;
     const $ = (id) => document.getElementById(id),
         money = (n) => "Rs. " + new Intl.NumberFormat("en-PK").format(n),
         int = (v) => {
@@ -52,7 +53,75 @@
                 })[char],
         );
 
-    const cartEntries = () => products.filter((p) => cart[p.id]);
+    const biscuitAmounts = [10, 20, 30, 40, 50, 100];
+    const isBiscuit = (p) => /biscuit|biscut|cookie/i.test(p.category + " " + p.name);
+
+    function closeBiscuitPrices() {
+        selectedBiscuitId = null;
+        $("biscuitPrices").hidden = true;
+    }
+
+    function updateBiscuitPriceTotal() {
+        if (selectedBiscuitId === null) return;
+        const selected = products.find((p) => p.id === selectedBiscuitId);
+        if (!selected.price_stocks) {
+            $("biscuitPriceStatus").textContent = "Set stock for each biscuit price in Manage products > Edit.";
+            return;
+        }
+        const total = Object.values(cart).filter((line) => line.productId === selectedBiscuitId)
+            .reduce((sum, line) => sum + line.lineTotal, 0);
+        $("biscuitPriceStatus").textContent = "Biscuit total: " + money(total);
+        $("biscuitPriceOptions").querySelectorAll('[data-amount]').forEach((button) => {
+            const remaining = availableStock(selectedBiscuitId, null, Number(button.dataset.amount));
+            button.disabled = remaining < 1;
+            button.querySelector('small').textContent = remaining + " left";
+        });
+    }
+
+    function openBiscuitPrices(product) {
+        selectedBiscuitId = product.id;
+        $("biscuitPriceName").textContent = product.name + " (" + product.size + ")";
+        $("biscuitPriceOptions").innerHTML = biscuitAmounts.map((amount) => {
+            const remaining = availableStock(product.id, null, amount);
+            return `<button type="button" class="biscuit-price-button" data-amount="${amount}" ${remaining < 1 ? 'disabled' : ''}>${money(amount)}<small>${remaining} left</small></button>`;
+        }).join("");
+        $("biscuitPrices").hidden = false;
+        updateBiscuitPriceTotal();
+    }
+
+    $("closeBiscuitPrices").onclick = closeBiscuitPrices;
+    $("biscuitPriceOptions").addEventListener("click", (event) => {
+        const button = event.target.closest("[data-amount]");
+        if (!button || selectedBiscuitId === null) return;
+        const amount = Number(button.dataset.amount);
+        const product = products.find((p) => p.id === selectedBiscuitId);
+        if (!product || !isBiscuit(product) || !biscuitAmounts.includes(amount)) return;
+        if (availableStock(product.id, null, amount) < 1) {
+            $("biscuitPriceStatus").textContent = "Not enough biscuit stock.";
+            return;
+        }
+        const key = product.id + "-" + amount;
+        const qty = (cart[key]?.qty || 0) + 1;
+        cart[key] = { productId: product.id, qty, unitPrice: amount, lineTotal: qty * amount };
+        renderCart();
+    });
+
+    const cartEntries = () => Object.entries(cart).map(([key, line]) => ({
+        ...products.find((p) => p.id === line.productId),
+        productId: line.productId,
+        id: key,
+    }));
+    function availableStock(productId, excludeKey = null, price = null) {
+        const product = products.find((p) => p.id === productId);
+        if (isBiscuit(product)) {
+            const selectedPrice = price ?? cart[excludeKey]?.unitPrice;
+            const key = productId + "-" + selectedPrice;
+            return Math.max(0, Number(product.price_stocks?.[selectedPrice] || 0) - (String(excludeKey) === key ? 0 : cart[key]?.qty || 0));
+        }
+        const used = Object.entries(cart).reduce((sum, [key, line]) =>
+            key !== String(excludeKey) && line.productId === productId ? sum + line.qty : sum, 0);
+        return qty2dp(product.stock - used);
+    }
     const sumQty = () => qty2dp(cartEntries().reduce((a, p) => a + cart[p.id].qty, 0));
     const sumTotal = () =>
         cartEntries().reduce((a, p) => a + cart[p.id].lineTotal, 0);
@@ -66,14 +135,14 @@
                 )
                 .map(
                     (p) =>
-                        `<button class="product" onclick="posAdd(${p.id})" ${p.stock <= 0 ? "disabled" : ""}><div class="product-icon">${icon(p)}</div><h3>${escape(p.name)}</h3><small>${escape(p.size)} / ${p.stock} in stock</small><div class="product-price"><span>${money(p.price)}</span><span class="add">+</span></div></button>`,
+                        `<button class="product" onclick="posAdd(${p.id})" ${p.stock <= 0 ? "disabled" : ""}><div class="product-icon">${icon(p)}</div><h3>${escape(p.name)}</h3><small>${escape(p.size)} / ${p.stock} in stock</small><div class="product-price"><span>${isBiscuit(p) ? "Choose price" : money(p.price)}</span><span class="add">+</span></div></button>`,
                 )
                 .join("") || '<p class="empty">No product found.</p>';
     }
 
     function lineHTML(p) {
         const line = cart[p.id];
-        return `<div class="item" data-line="${p.id}"><div class="item-icon">${icon(p)}</div><div class="item-main"><div class="item-name">${escape(p.name)}</div><small>${escape(p.size)}</small><div class="item-controls"><span class="unit-price">Rate: ${money(line.unitPrice)}</span><div class="qty"><button type="button" data-act="dec" data-id="${p.id}">-</button><input class="qty-input" type="number" min="0.01" max="${p.stock}" step="0.01" inputmode="decimal" aria-label="Quantity" value="${line.qty}" data-act="qty" data-id="${p.id}"><button type="button" data-act="inc" data-id="${p.id}">+</button></div></div></div><div class="item-amount">Price Rs.<input class="amount-input" aria-label="Total price" title="Enter amount to calculate quantity at the product rate" type="number" min="0" step="1" inputmode="numeric" value="${line.lineTotal}" data-act="total" data-id="${p.id}" ${line.unitPrice <= 0 ? "readonly" : ""}></div></div>`;
+        return `<div class="item" data-line="${p.id}"><div class="item-icon">${icon(p)}</div><div class="item-main"><div class="item-name">${escape(p.name)}</div><small>${escape(p.size)}</small><div class="item-controls"><span class="unit-price">Rate: ${money(line.unitPrice)}</span><div class="qty"><button type="button" data-act="dec" data-id="${p.id}">-</button><input class="qty-input" type="number" min="${isBiscuit(p) ? 1 : 0.01}" max="${isBiscuit(p) ? Math.floor(availableStock(p.productId, p.id)) : p.stock}" step="${isBiscuit(p) ? 1 : 0.01}" inputmode="decimal" aria-label="Quantity" value="${line.qty}" data-act="qty" data-id="${p.id}"><button type="button" data-act="inc" data-id="${p.id}">+</button></div></div></div><div class="item-amount">Price Rs.<input class="amount-input" aria-label="Total price" title="Enter amount to calculate quantity at the product rate" type="number" min="0" step="1" inputmode="numeric" value="${line.lineTotal}" data-act="total" data-id="${p.id}" ${isBiscuit(p) || line.unitPrice <= 0 ? "readonly" : ""}></div></div>`;
     }
 
     function renderCart() {
@@ -85,6 +154,7 @@
     }
 
     function patchTotals() {
+        updateBiscuitPriceTotal();
         const count = sumQty(),
             total = sumTotal();
         $("cartCount").textContent = `${count} item${count === 1 ? "" : "s"}`;
@@ -120,8 +190,9 @@
     function posEdit(id, act, raw) {
         const line = cart[id];
         if (!line) return;
-        const p = products.find((x) => x.id === id);
-        if (act === "total" && line.unitPrice > 0) {
+        const p = products.find((x) => x.id === line.productId);
+        const maxQty = isBiscuit(p) ? Math.floor(availableStock(p.id, id)) : p.stock;
+        if (act === "total" && !isBiscuit(p) && line.unitPrice > 0) {
             line.lineTotal = int(raw);
             line.qty = qty2dp(line.lineTotal / line.unitPrice);
             if (line.qty > p.stock || line.lineTotal > Math.round(p.stock * line.unitPrice)) {
@@ -131,8 +202,8 @@
             }
             setInput(id, "qty", line.qty);
         } else if (act === "qty") {
-            let q = qty2dp(raw) || 0.01;
-            if (q > p.stock) q = p.stock;
+            let q = isBiscuit(p) ? Math.max(1, int(raw)) : qty2dp(raw) || 0.01;
+            if (q > maxQty) q = maxQty;
             line.qty = q;
             line.lineTotal = Math.round(line.qty * line.unitPrice);
             setInput(id, "total", line.lineTotal);
@@ -143,8 +214,9 @@
     function changeQty(id, delta) {
         const line = cart[id];
         if (!line) return;
-        const p = products.find((x) => x.id === id);
-        const q = qty2dp(Math.min(p.stock, line.qty + delta));
+        const p = products.find((x) => x.id === line.productId);
+        const maxQty = isBiscuit(p) ? Math.floor(availableStock(p.id, id)) : p.stock;
+        const q = qty2dp(Math.min(maxQty, line.qty + delta));
         if (q <= 0) {
             delete cart[id];
             renderCart();
@@ -159,6 +231,11 @@
     window.posAdd = (id) => {
         const p = products.find((p) => p.id === id);
         if (!p || p.stock <= 0) return;
+        if (isBiscuit(p)) {
+            openBiscuitPrices(p);
+            return;
+        }
+        closeBiscuitPrices();
         const line = cart[id];
         if (line) {
             if (line.qty >= p.stock) return;
@@ -166,7 +243,7 @@
             line.lineTotal = Math.round(line.qty * line.unitPrice);
         } else {
             const qty = Math.min(1, p.stock);
-            cart[id] = { qty, unitPrice: p.price, lineTotal: Math.round(qty * p.price) };
+            cart[id] = { productId: p.id, qty, unitPrice: p.price, lineTotal: Math.round(qty * p.price) };
         }
         renderCart();
     };
@@ -176,20 +253,20 @@
         const t = e.target,
             act = t.dataset.act;
         if (!act || t.tagName !== "INPUT") return;
-        posEdit(Number(t.dataset.id), act, t.value);
+        posEdit(t.dataset.id, act, t.value);
     });
     $("orderItems").addEventListener("change", (e) => {
         const t = e.target,
             act = t.dataset.act;
         if (!act || t.tagName !== "INPUT") return;
-        posEdit(Number(t.dataset.id), act, t.value);
-        patchLine(Number(t.dataset.id)); // normalise (clamp qty, blank -> 0)
+        posEdit(t.dataset.id, act, t.value);
+        patchLine(t.dataset.id); // normalise (clamp qty, blank -> 0)
     });
     $("orderItems").addEventListener("click", (e) => {
         const t = e.target,
             act = t.dataset.act;
-        if (act === "inc") changeQty(Number(t.dataset.id), 1);
-        else if (act === "dec") changeQty(Number(t.dataset.id), -1);
+        if (act === "inc") changeQty(t.dataset.id, 1);
+        else if (act === "dec") changeQty(t.dataset.id, -1);
     });
 
     function printReceipt(invoice, lines, total, paid, due, customerName) {
@@ -291,6 +368,7 @@
     };
 
     $("clear").onclick = () => {
+        closeBiscuitPrices();
         cart = {};
         renderCart();
     };
@@ -335,7 +413,7 @@
                     customer_id: hasCustomer ? Number(customerId) : null,
                     paid_amount: paid,
                     items: entries.map((product) => ({
-                        product_id: product.id,
+                        product_id: product.productId,
                         quantity: cart[product.id].qty,
                         unit_price: cart[product.id].unitPrice,
                         line_total: cart[product.id].lineTotal,
@@ -344,9 +422,14 @@
             }),
                 data = await r.json();
             if (!r.ok) throw Error(data.message || "Sale could not be saved.");
-            receiptLines.forEach(({ product, qty }) => {
-                product.stock = qty2dp(product.stock - qty);
+            receiptLines.forEach(({ product, qty, unitPrice }) => {
+                const original = products.find((p) => p.id === product.productId);
+                original.stock = qty2dp(original.stock - qty);
+                if (isBiscuit(original)) {
+                    original.price_stocks[unitPrice] = Math.max(0, Number(original.price_stocks[unitPrice] || 0) - qty);
+                }
             });
+            closeBiscuitPrices();
             cart = {};
             resetAfterSale();
             renderProducts($("search").value);

@@ -1,0 +1,24 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::table('products', function (Blueprint $table) {
+            $table->json('price_stocks')->nullable();
+        });
+        Schema::table('purchase_items', function (Blueprint $table) {
+            $table->unsignedInteger('selling_price')->nullable();
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::table('purchase_items', fn (Blueprint $table) => $table->dropColumn('selling_price'));
+        Schema::table('products', fn (Blueprint $table) => $table->dropColumn('price_stocks'));
+    }
+};

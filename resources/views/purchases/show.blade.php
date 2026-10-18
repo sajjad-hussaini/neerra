@@ -63,6 +63,7 @@
 
                             <td>
                                 {{ $item->product?->name ?? 'Product #' . $item->product_id }}
+                                @if($item->selling_price)<small>Rs. {{ $item->selling_price }} biscuits</small>@endif
                             </td>
 
                             <td class="right">

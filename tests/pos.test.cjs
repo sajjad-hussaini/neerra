@@ -9,7 +9,7 @@ function setup(products) {
     let submitted;
     function element(id) {
         if (!elements.has(id)) {
-            const el = { value: '', listeners: {}, classList: { add() {}, remove() {} },
+            const el = { value: '', querySelectorAll: () => [], listeners: {}, classList: { add() {}, remove() {} },
                 addEventListener(type, handler) { this.listeners[type] = handler; } };
             Object.defineProperty(el, 'innerHTML', {
                 get() { return this.html; },
@@ -33,7 +33,7 @@ function setup(products) {
         window, document: { getElementById: element, querySelectorAll: () => [],
             querySelector(selector) {
                 if (selector.startsWith('meta')) return { content: 'token' };
-                const [, id, act] = selector.match(/data-line="(\d+)".*data-act="([^"]+)"/);
+                const [, id, act] = selector.match(/data-line="([^"]+)".*data-act="([^"]+)"/);
                 return fields.get(`${id}:${act}`);
             } },
         Intl, Date, console, setTimeout() {}, alert(message) { throw Error(message); },
@@ -107,4 +107,90 @@ test('decimal quantities round money consistently and zero amount blocks checkou
     assert.equal(app.element('checkout').disabled, true);
     app.edit(1, 'total', 100);
     assert.equal(app.element('checkout').disabled, false);
+});
+
+function chooseBiscuitAmount(app, amount) {
+    const button = { dataset: { amount: String(amount) } };
+    app.element('biscuitPriceOptions').listeners.click({ target: { closest: () => button } });
+}
+const biscuit = (id, stock = 5) => ({ ...product(id, stock * 6), name: 'Biscuits', category: 'Biscuits', price_stocks: { 10: stock, 20: stock, 30: stock, 40: stock, 50: stock, 100: stock } });
+
+test('one biscuit product supports separate prices with whole quantities and one shared product ID', async () => {
+    const app = setup([biscuit(1, 10), product(2)]);
+    app.window.posAdd(1);
+    assert.equal(app.element('biscuitPrices').hidden, false);
+    for (const amount of [10, 20, 30, 40, 50, 100]) {
+        assert.ok(app.element('biscuitPriceOptions').innerHTML.includes('data-amount="' + amount + '"'));
+    }
+    assert.doesNotMatch(app.element('orderItems').innerHTML, /data-line="1-/);
+    chooseBiscuitAmount(app, 20);
+    chooseBiscuitAmount(app, 20);
+    chooseBiscuitAmount(app, 50);
+    assert.equal(app.value('1-20', 'qty'), 2);
+    assert.equal(app.value('1-20', 'total'), 40);
+    assert.equal(app.value('1-50', 'qty'), 1);
+    assert.equal(app.value('1-50', 'total'), 50);
+    assert.equal(app.element('total').textContent, 'Rs. 90');
+    app.window.posAdd(2);
+    assert.equal(app.element('biscuitPrices').hidden, true);
+    assert.equal(app.element('total').textContent, 'Rs. 290');
+    await app.element('checkout').onclick();
+    const lines = app.submitted().items.filter((line) => line.product_id === 1);
+    assert.equal(lines.length, 2);
+    assert.deepEqual(lines.map((line) => [line.quantity, line.unit_price, line.line_total]), [[2, 20, 40], [1, 50, 50]]);
+    app.window.posAdd(1);
+    // Sales reduced the selected prices only. Rs. 10 stock is still ten.
+    for (let i = 0; i < 11; i++) chooseBiscuitAmount(app, 10);
+    assert.equal(app.value('1-10', 'qty'), 10);
+    assert.match(app.element('biscuitPriceStatus').textContent, /Not enough/);
+});
+
+test('each price has independent stock and quantity edits cannot exceed that price stock', () => {
+    const app = setup([biscuit(1, 3)]);
+    app.window.posAdd(1);
+    chooseBiscuitAmount(app, 10);
+    chooseBiscuitAmount(app, 50);
+    app.edit('1-10', 'qty', 10);
+    assert.equal(app.value('1-10', 'qty'), 3);
+    assert.equal(app.value('1-10', 'total'), 30);
+    assert.equal(app.value('1-50', 'qty'), 1);
+    chooseBiscuitAmount(app, 10);
+    assert.equal(app.value('1-10', 'qty'), 3);
+    assert.match(app.element('biscuitPriceStatus').textContent, /Not enough/);
+    chooseBiscuitAmount(app, 30);
+    assert.equal(app.value('1-30', 'qty'), 1);
+    app.click('1-50', 'inc');
+    assert.equal(app.value('1-50', 'qty'), 2);
+    app.click('1-10', 'dec');
+    assert.equal(app.value('1-10', 'qty'), 2);
+    app.edit('1-10', 'total', 100);
+    assert.equal(app.value('1-10', 'total'), 20);
+});
+
+test('unallocated and empty biscuit price stocks cannot be sold', () => {
+    const app = setup([{ ...biscuit(1), price_stocks: null }, { ...biscuit(2), price_stocks: { 20: 1 } }]);
+    app.window.posAdd(1);
+    assert.match(app.element('biscuitPriceStatus').textContent, /Set stock for each/);
+    chooseBiscuitAmount(app, 10);
+    assert.doesNotMatch(app.element('orderItems').innerHTML, /data-line="1-/);
+    app.window.posAdd(2);
+    chooseBiscuitAmount(app, 10);
+    assert.doesNotMatch(app.element('orderItems').innerHTML, /data-line="2-10"/);
+    chooseBiscuitAmount(app, 20);
+    assert.equal(app.value('2-20', 'qty'), 1);
+});
+
+test('clearing removes all price options from the order and base price does not affect biscuit pricing', () => {
+    const app = setup([{ ...biscuit(1), price: 5000 }]);
+    app.window.posAdd(1);
+    chooseBiscuitAmount(app, 10);
+    assert.equal(app.value('1-10', 'qty'), 1);
+    assert.equal(app.value('1-10', 'total'), 10);
+    app.element('clear').onclick();
+    assert.equal(app.element('biscuitPrices').hidden, true);
+    app.window.posAdd(1);
+    assert.equal(app.element('biscuitPriceStatus').textContent, 'Biscuit total: Rs. 0');
+    chooseBiscuitAmount(app, 50);
+    assert.equal(app.value('1-50', 'total'), 50);
+    assert.doesNotMatch(app.element('orderItems').innerHTML, /data-line="1-10"/);
 });

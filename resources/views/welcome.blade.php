@@ -26,6 +26,15 @@
                     <a class="text-link" href="{{ route('products.index') }}">Manage products</a>
                 </div>
             </div><label class="search">⌕<input id="search" type="search" placeholder="Search products..."></label>
+            <section class="biscuit-prices" id="biscuitPrices" aria-labelledby="biscuitPriceName" hidden>
+                <div class="biscuit-price-heading">
+                    <strong id="biscuitPriceName"></strong>
+                    <button type="button" class="button-light" id="closeBiscuitPrices" aria-label="Close biscuit prices">Close</button>
+                </div>
+                <p>Choose a biscuit price. Each click adds one biscuit at that price.</p>
+                <div class="biscuit-price-options" id="biscuitPriceOptions" role="group" aria-label="Biscuit amounts"></div>
+                <p class="biscuit-price-status" id="biscuitPriceStatus" role="status" aria-live="polite"></p>
+            </section>
             <div class="products" id="products"></div>
         </section>
         <aside class="cart">

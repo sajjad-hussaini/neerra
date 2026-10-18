@@ -4,8 +4,8 @@
         return [
             'id' => $product->id, 'name' => $product->name, 'size' => $product->size,
             'category' => $product->category, 'price' => (float) $product->price,
-            'availableStock' => max(0, (int) floor((float) $product->stock)),
-            'max' => min(100, max(0, (int) floor((float) $product->stock))),
+            'availableStock' => max(0, (int) floor($product->stockForPrice((int) $product->price))),
+            'max' => min(100, max(0, (int) floor($product->stockForPrice((int) $product->price)))),
             'image' => asset('images/store/' . ($water ? 'drinking-water.jpg' : 'fresh-milk.jpg')),
         ];
     })->values();

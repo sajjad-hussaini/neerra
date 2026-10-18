@@ -28,8 +28,9 @@ class PurchaseController extends Controller
             'purchased_at'         => ['required', 'date'],
             'paid_amount'          => ['nullable', 'numeric', 'min:0'],
             'items'                => ['required', 'array', 'min:1'],
-            'items.*.product_id'   => ['required', 'exists:products,id', 'distinct'],
+            'items.*.product_id'   => ['required', 'exists:products,id'],
             'items.*.quantity'     => ['required', 'integer', 'min:1'],
+            'items.*.selling_price' => ['nullable', 'integer', 'in:10,20,30,40,50,100'],
             'items.*.unit_cost'    => ['required', 'integer', 'min:0'],
         ]);
 
@@ -46,15 +47,26 @@ class PurchaseController extends Controller
                 'purchased_at'     => $data['purchased_at'],
             ]);
 
-            foreach ($data['items'] as $item) {
+            foreach ($data['items'] as $index => $item) {
+                $product = Product::lockForUpdate()->findOrFail($item['product_id']);
+                if ($product->isBiscuit()) {
+                    if (! isset($item['selling_price'])) {
+                        throw \Illuminate\Validation\ValidationException::withMessages(["items.$index.selling_price" => 'Choose the biscuit selling price to restock.']);
+                    }
+                    if ($product->price_stocks === null && $product->stock > 0) {
+                        throw \Illuminate\Validation\ValidationException::withMessages(["items.$index.product_id" => 'First divide the existing biscuit stock by price in Edit product.']);
+                    }
+                }
+                $sellingPrice = $product->isBiscuit() ? (int) $item['selling_price'] : null;
                 $purchase->items()->create([
                     'product_id' => $item['product_id'],
+                    'selling_price' => $sellingPrice,
                     'quantity'   => $item['quantity'],
                     'unit_cost'  => $item['unit_cost'],
                     'line_total' => $item['quantity'] * $item['unit_cost'],
                 ]);
 
-                Product::where('id', $item['product_id'])->increment('stock', $item['quantity']);
+                $product->changeStock($item['quantity'], $sellingPrice ?? (int) $product->price);
             }
 
             if ($purchase->supplier_id) {
