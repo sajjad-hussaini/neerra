@@ -66,6 +66,13 @@
             </div>
             <div class="summary">
                 <div><span>Subtotal</span><span id="subtotal">Rs. 0</span></div>
+                <div class="discount-toggle">
+                    <label for="discountEnabled"><input type="checkbox" id="discountEnabled" aria-controls="discountRow" aria-expanded="false"> Apply discount</label>
+                </div>
+                <div class="discount-row" id="discountRow" hidden>
+                    <label for="discountAmount">Discount (Rs.)</label>
+                    <span class="paid-input">Rs. <input type="number" id="discountAmount" min="0" step="1" inputmode="numeric" value="" disabled></span>
+                </div>
                 <div class="total"><span>Total</span><span id="total">Rs. 0</span></div>
                 <div class="paid-row" id="paidRow" hidden>
                     <span>Paid now</span>

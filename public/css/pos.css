@@ -1224,6 +1224,17 @@ tfoot td {
     font-weight: 700;
     color: var(--danger)
 }
+
+.discount-toggle label {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+}
+
+.summary > .discount-row[hidden] {
+    display: none;
+}
     .pagination svg {
     width: 20px !important;
     height: 20px !important;

@@ -22,7 +22,7 @@ class ProductController extends Controller
             'size' => ['required', 'string', 'max:50', Rule::unique('products')->where(fn ($q) => $q->where('name', $request->name))->ignore($product)],
             'category' => ['required', 'string', 'max:50'],
             'price' => ['required', 'integer', 'min:1'],
-            'stock' => [$isBiscuit ? 'nullable' : 'required', 'integer', 'min:0', 'max:99999999'],
+            'stock' => [$isBiscuit ? 'nullable' : 'required', 'numeric', 'min:0', 'max:99999999.99', 'decimal:0,2'],
             'is_active' => ['nullable', 'boolean'],
         ];
         if ($isBiscuit) {

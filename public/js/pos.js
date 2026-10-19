@@ -125,6 +125,8 @@
     const sumQty = () => qty2dp(cartEntries().reduce((a, p) => a + cart[p.id].qty, 0));
     const sumTotal = () =>
         cartEntries().reduce((a, p) => a + cart[p.id].lineTotal, 0);
+    const discountAmount = () => $("discountEnabled").checked ? int($("discountAmount").value) : 0;
+    const payableTotal = () => Math.max(0, sumTotal() - discountAmount());
 
     function renderProducts(query = "") {
         const q = query.toLowerCase();
@@ -156,11 +158,21 @@
     function patchTotals() {
         updateBiscuitPriceTotal();
         const count = sumQty(),
-            total = sumTotal();
+            subtotal = sumTotal(),
+            total = payableTotal(),
+            discountEnabled = $("discountEnabled").checked;
         $("cartCount").textContent = `${count} item${count === 1 ? "" : "s"}`;
-        $("subtotal").textContent = money(total);
+        $("subtotal").textContent = money(subtotal);
         $("total").textContent = money(total);
-        $("checkout").disabled = !count || cartEntries().some((p) => cart[p.id].qty <= 0);
+        $("discountRow").hidden = !discountEnabled;
+        $("discountAmount").disabled = !discountEnabled;
+        $("discountAmount").max = subtotal;
+        const invalidDiscount = discountEnabled && (
+            !Number.isInteger(Number($("discountAmount").value)) ||
+            Number($("discountAmount").value) < 0 || discountAmount() > subtotal
+        );
+        $("discountAmount").setCustomValidity(invalidDiscount ? "Enter a whole rupee discount between 0 and " + subtotal + "." : "");
+        $("checkout").disabled = !count || invalidDiscount || cartEntries().some((p) => cart[p.id].qty <= 0);
         const hasCustomer = !!customerId;
         $("paidRow").hidden = !hasCustomer;
         $("dueRow").hidden = !hasCustomer;
@@ -269,7 +281,7 @@
         else if (act === "dec") changeQty(t.dataset.id, -1);
     });
 
-    function printReceipt(invoice, lines, total, paid, due, customerName) {
+    function printReceipt(invoice, lines, total, paid, due, customerName, discount = 0) {
         const content = lines
             .map(
                 ({ product, qty, unitPrice, lineTotal }) =>
@@ -279,10 +291,13 @@
         const custRow = customerName
             ? `<p>Customer: ${escape(customerName)}</p>`
             : "";
-        const payRows =
+        const discountRows = Number(discount) > 0
+            ? `<p style="text-align:right">Subtotal: ${money(Number(total) + Number(discount))}</p><p style="text-align:right">Discount: -${money(discount)}</p>`
+            : "";
+        const payRows = discountRows + (
             Number(due) > 0
                 ? `<p style="text-align:right;margin-top:20px"><strong>Total: ${money(total)}</strong></p><p style="text-align:right">Paid: ${money(paid)}</p><p style="text-align:right;color:#b00000"><strong>Udhaar / Balance: ${money(due)}</strong></p>`
-                : `<p style="text-align:right;margin-top:20px"><strong>Total: ${money(total)}</strong></p>`;
+                : `<p style="text-align:right;margin-top:20px"><strong>Total: ${money(total)}</strong></p>`);
         const popup = window.open("", "_blank", "width=520,height=650");
         if (!popup) return;
         popup.document.write(
@@ -309,10 +324,25 @@
     });
     $("paidAmount").addEventListener("input", () => {
         paidTouched = true;
-        const total = sumTotal();
+        const total = payableTotal();
         const paid = Math.max(0, Math.min(int($("paidAmount").value), total));
         $("dueAmount").textContent = money(total - paid);
     });
+
+    $("discountEnabled").addEventListener("change", () => {
+        const enabled = $("discountEnabled").checked;
+        $("discountEnabled").setAttribute("aria-expanded", String(enabled));
+        if (!enabled) $("discountAmount").value = "0";
+        patchTotals();
+        if (enabled) $("discountAmount").focus();
+    });
+    $("discountAmount").addEventListener("input", patchTotals);
+
+    function resetDiscount() {
+        $("discountEnabled").checked = false;
+        $("discountEnabled").setAttribute("aria-expanded", "false");
+        $("discountAmount").value = "0";
+    }
 
     // Inline "new customer" form
     const clearNewCustomer = () => {
@@ -370,10 +400,12 @@
     $("clear").onclick = () => {
         closeBiscuitPrices();
         cart = {};
+        resetDiscount();
         renderCart();
     };
 
     function resetAfterSale() {
+        resetDiscount();
         customerId = "";
         $("customerSelect").value = "";
         paidTouched = false;
@@ -383,8 +415,8 @@
     $("checkout").onclick = async () => {
         const btn = $("checkout"),
             entries = cartEntries();
-        if (!entries.length) return;
-        const total = sumTotal(),
+        if (!entries.length || btn.disabled) return;
+        const total = payableTotal(),
             hasCustomer = !!customerId,
             paid = hasCustomer
                 ? Math.max(0, Math.min(int($("paidAmount").value), total))
@@ -412,6 +444,8 @@
                     payment_method: payment,
                     customer_id: hasCustomer ? Number(customerId) : null,
                     paid_amount: paid,
+                    discount_enabled: !!$("discountEnabled").checked,
+                    discount_amount: discountAmount(),
                     items: entries.map((product) => ({
                         product_id: product.productId,
                         quantity: cart[product.id].qty,
@@ -442,6 +476,7 @@
                 data.paid,
                 data.due,
                 customerName,
+                data.discount_amount,
             );
             const t = $("toast");
             t.textContent =

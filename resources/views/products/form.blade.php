@@ -16,7 +16,7 @@
         <label>Size / unit<input name="size" value="{{ old('size', $product->size) }}" placeholder="e.g. 1 Litre, 1 Pack, 1 Piece" required></label>
         <label>Category<input name="category" list="productCategories" value="{{ old('category', $product->category) }}" placeholder="Choose or type a category" required></label>
         <label>Default price (Rs.)<input type="number" min="1" step="1" name="price" value="{{ old('price', $product->price ?? 10) }}" required></label>
-        <label><span id="stockLabel">Available stock</span><input type="number" min="0" step="1" name="stock" value="{{ old('stock', $product->stock ?? 0) }}" required></label>
+        <label><span id="stockLabel">Available stock</span><input type="number" min="0" max="99999999.99" step="0.01" name="stock" value="{{ old('stock', $product->stock ?? 0) }}" required></label>
         <label class="checkbox"><input type="checkbox" name="is_active" value="1" @checked(old('is_active', $product->exists ? $product->is_active : true))>Available for sale</label>
     </div>
     <section id="biscuitStockFields" @if(! $product->isBiscuit() && ! preg_match('/biscuit|biscut|cookie/i', old('category', '').' '.old('name', ''))) hidden @endif>

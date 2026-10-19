@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Sale extends Model
 {
-    protected $fillable = ['invoice_number', 'customer_id', 'payment_method', 'channel', 'customer_name', 'customer_phone', 'delivery_address', 'status', 'total', 'paid_amount', 'due_amount', 'sold_at'];
+    protected $fillable = ['invoice_number', 'customer_id', 'payment_method', 'channel', 'customer_name', 'customer_phone', 'delivery_address', 'status', 'total', 'discount_amount', 'paid_amount', 'due_amount', 'sold_at'];
     protected function casts(): array
     {
         return ['sold_at' => 'datetime'];

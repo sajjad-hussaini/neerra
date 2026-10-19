@@ -8,6 +8,8 @@ use App\Models\Sale;
 use App\Services\CustomerLedgerService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class PosController extends Controller
 {
@@ -26,6 +28,8 @@ class PosController extends Controller
             'payment_method' => ['required', 'in:Cash,Card,Online'],
             'customer_id' => ['nullable', 'integer', 'exists:customers,id'],
             'paid_amount' => ['nullable', 'numeric', 'min:0'],
+            'discount_enabled' => ['sometimes', 'boolean'],
+            'discount_amount' => ['nullable', Rule::requiredIf($request->boolean('discount_enabled')), 'integer', 'min:0', 'max:4294967295'],
             'items' => ['required', 'array', 'min:1'],
             'items.*.product_id' => ['required', 'integer', 'exists:products,id'],
             'items.*.quantity' => ['required', 'numeric', 'min:0.01', 'max:99999999.99', 'decimal:0,2'],
@@ -50,6 +54,12 @@ class PosController extends Controller
                 $total += $lineTotal; $lines[] = compact('product', 'item', 'lineTotal');
             }
 
+            $subtotal = $total;
+            $discount = ! empty($data['discount_enabled']) ? (int) $data['discount_amount'] : 0;
+            if ($discount > $subtotal) {
+                throw ValidationException::withMessages(['discount_amount' => 'Discount cannot exceed the subtotal.']);
+            }
+            $total = $subtotal - $discount;
             $customerId = $data['customer_id'] ?? null;
             $paid = array_key_exists('paid_amount', $data) && $data['paid_amount'] !== null
                 ? (int) round($data['paid_amount'])
@@ -63,6 +73,7 @@ class PosController extends Controller
                 'customer_id' => $customerId,
                 'payment_method' => $data['payment_method'],
                 'total' => $total,
+                'discount_amount' => $discount,
                 'paid_amount' => $paid,
                 'due_amount' => $due,
                 'sold_at' => now(),
@@ -81,7 +92,7 @@ class PosController extends Controller
 
             return $sale;
         });
-        return response()->json(['message' => 'Sale saved successfully.', 'invoice_number' => $sale->invoice_number, 'total' => $sale->total, 'paid' => $sale->paid_amount, 'due' => $sale->due_amount], 201);
+        return response()->json(['message' => 'Sale saved successfully.', 'invoice_number' => $sale->invoice_number, 'subtotal' => $sale->total + $sale->discount_amount, 'discount_amount' => $sale->discount_amount, 'total' => $sale->total, 'paid' => $sale->paid_amount, 'due' => $sale->due_amount], 201);
     }
 
     public function stats()

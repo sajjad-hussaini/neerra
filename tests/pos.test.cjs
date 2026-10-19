@@ -3,13 +3,17 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
 
-function setup(products) {
+function setup(products, { print = false } = {}) {
     const elements = new Map();
     const fields = new Map();
     let submitted;
+    let receipt = '';
     function element(id) {
         if (!elements.has(id)) {
-            const el = { value: '', querySelectorAll: () => [], listeners: {}, classList: { add() {}, remove() {} },
+            const el = { value: '', checked: false, querySelectorAll: () => [], listeners: {}, classList: { add() {}, remove() {} },
+                setCustomValidity(message) { this.validationMessage = message; },
+                setAttribute(name, value) { this[name] = value; },
+                focus() {},
                 addEventListener(type, handler) { this.listeners[type] = handler; } };
             Object.defineProperty(el, 'innerHTML', {
                 get() { return this.html; },
@@ -28,7 +32,9 @@ function setup(products) {
         }
         return elements.get(id);
     }
-    const window = { posConfig: { products, statsUrl: '/stats', storeUrl: '/sales' }, open() { return null; } };
+    const window = { posConfig: { products, statsUrl: '/stats', storeUrl: '/sales' }, open() {
+        return print ? { document: { write(html) { receipt = html; }, close() {} } } : null;
+    } };
     vm.runInNewContext(fs.readFileSync('public/js/pos.js', 'utf8'), {
         window, document: { getElementById: element, querySelectorAll: () => [],
             querySelector(selector) {
@@ -40,11 +46,12 @@ function setup(products) {
         async fetch(url, options) {
             if (options) submitted = JSON.parse(options.body);
             return { ok: true, async json() { return url === '/sales'
-                ? { invoice_number: 'TEST', total: submitted.items.reduce((sum, line) => sum + line.line_total, 0), paid: 100, due: 0 }
+                ? { invoice_number: 'TEST', total: submitted.items.reduce((sum, line) => sum + line.line_total, 0) - submitted.discount_amount,
+                    discount_amount: submitted.discount_amount, paid: submitted.paid_amount, due: 0 }
                 : { today_total: 0, today_orders: 0, month_total: 0, year_total: 0 }; } };
         }
     });
-    return { window, element, submitted: () => submitted,
+    return { window, element, submitted: () => submitted, receipt: () => receipt,
         value(id, act) { return Number(fields.get(`${id}:${act}`).value); },
         edit(id, act, value) {
             const target = fields.get(`${id}:${act}`);
@@ -56,6 +63,72 @@ function setup(products) {
     };
 }
 const product = (id, stock = 5) => ({ id, name: 'Water', size: '1L', category: 'water', price: 200, stock });
+
+function setDiscount(app, enabled, amount = 0) {
+    app.element('discountEnabled').checked = enabled;
+    app.element('discountEnabled').listeners.change();
+    if (enabled) {
+        app.element('discountAmount').value = String(amount);
+        app.element('discountAmount').listeners.input();
+    }
+}
+
+test('discount checkbox updates payable total, payment, receipt and resets after a sale', async () => {
+    const app = setup([product(1)], { print: true });
+    app.window.posAdd(1);
+    assert.equal(app.element('discountRow').hidden, true);
+    assert.equal(app.element('discountAmount').disabled, true);
+    setDiscount(app, true, 50);
+    assert.equal(app.element('discountRow').hidden, false);
+    assert.equal(app.element('subtotal').textContent, 'Rs. 200');
+    assert.equal(app.element('total').textContent, 'Rs. 150');
+    assert.equal(app.value(1, 'qty'), 1);
+    await app.element('checkout').onclick();
+    assert.equal(app.submitted().discount_enabled, true);
+    assert.equal(app.submitted().discount_amount, 50);
+    assert.equal(app.submitted().paid_amount, 150);
+    assert.match(app.receipt(), /Subtotal: Rs\. 200/);
+    assert.match(app.receipt(), /Discount: -Rs\. 50/);
+    assert.match(app.receipt(), /Total: Rs\. 150/);
+    assert.equal(app.element('discountEnabled').checked, false);
+    app.window.posAdd(1);
+    assert.equal(app.element('total').textContent, 'Rs. 200');
+    assert.equal(app.value(1, 'qty'), 1);
+});
+
+test('discount updates udhaar and unchecking or clearing removes the discount', () => {
+    const app = setup([product(1)]);
+    app.window.posAdd(1);
+    app.element('customerSelect').listeners.change({ target: { value: '1' } });
+    app.element('paidAmount').value = '100';
+    app.element('paidAmount').listeners.input();
+    setDiscount(app, true, 50);
+    assert.equal(app.element('dueAmount').textContent, 'Rs. 50');
+    setDiscount(app, false);
+    assert.equal(app.element('total').textContent, 'Rs. 200');
+    assert.equal(app.element('dueAmount').textContent, 'Rs. 100');
+    setDiscount(app, true, 25);
+    app.element('clear').onclick();
+    app.window.posAdd(1);
+    assert.equal(app.element('total').textContent, 'Rs. 200');
+    assert.equal(app.element('discountEnabled').checked, false);
+});
+
+test('invalid discounts block checkout and a full discount allows a zero total', async () => {
+    const app = setup([product(1)]);
+    app.window.posAdd(1);
+    for (const discount of [-1, 201, 0.5]) {
+        setDiscount(app, true, discount);
+        assert.equal(app.element('checkout').disabled, true);
+        await app.element('checkout').onclick();
+        assert.equal(app.submitted(), undefined);
+    }
+    setDiscount(app, true, 200);
+    assert.equal(app.element('checkout').disabled, false);
+    assert.equal(app.element('total').textContent, 'Rs. 0');
+    app.edit(1, 'qty', 0.5);
+    assert.equal(app.element('checkout').disabled, true);
+});
 
 test('amount changes quantity at a fixed rate and saves fractional stock correctly', async () => {
     const app = setup([product(1, 1.5)]);

@@ -35,6 +35,16 @@
                 @endforeach
             </tbody>
             <tfoot>
+                @if ($sale->discount_amount > 0)
+                    <tr>
+                        <td colspan="3" class="right">Subtotal</td>
+                        <td class="right">Rs. {{ number_format($sale->total + $sale->discount_amount) }}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="3" class="right">Discount</td>
+                        <td class="right">- Rs. {{ number_format($sale->discount_amount) }}</td>
+                    </tr>
+                @endif
                 <tr>
                     <td colspan="3" class="right"><strong>Order total</strong></td>
                     <td class="right"><strong>Rs. {{ number_format($sale->total) }}</strong></td>
