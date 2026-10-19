@@ -15,6 +15,7 @@
                     <th>Phone</th>
                     <th>Purchases</th>
                     <th class="right">Balance</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -24,8 +25,15 @@
                         <td>{{ $supplier->phone ?: '—' }}</td>
                         <td>{{ $supplier->purchases_count }}</td>
                         <td class="right">Rs. {{ number_format($supplier->currentBalance()) }}</td>
+                        <td>
+                            <form method="post" action="{{ route('suppliers.destroy', $supplier) }}" onsubmit="return confirm('Delete this supplier? Past purchases and khata records will be kept.');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="record-delete">Delete</button>
+                            </form>
+                        </td>
                 </tr>@empty<tr>
-                        <td colspan="4" class="empty">No suppliers added yet.</td>
+                        <td colspan="5" class="empty">No suppliers added yet.</td>
                     </tr>
                 @endforelse
             </tbody>

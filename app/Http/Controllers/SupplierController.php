@@ -49,4 +49,11 @@ class SupplierController extends Controller
 
         return back()->with('success', 'Payment recorded.');
     }
+
+    public function destroy(Supplier $supplier)
+    {
+        $supplier->delete();
+
+        return redirect()->route('suppliers.index')->with('success', 'Supplier deleted.');
+    }
 }

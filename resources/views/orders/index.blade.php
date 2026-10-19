@@ -29,9 +29,11 @@
                         <td><span class="status info">{{ $sale->channel ?? 'POS' }}</span></td>
                         <td>
                             @if ($sale->customer?->name)
-                                <a href="{{ route('customers.show', $sale->customer) }}">
-                                    {{ $sale->customer->name }}
-                                </a>
+                                @if ($sale->customer->trashed())
+                                    {{ $sale->customer->name }} (deleted)
+                                @else
+                                    <a href="{{ route('customers.show', $sale->customer) }}">{{ $sale->customer->name }}</a>
+                                @endif
                             @else
                                 Walk-in customer
                             @endif

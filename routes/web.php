@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::get('customers', [CustomerController::class, 'index'])->name('customers.index');
     Route::get('customers/create', [CustomerController::class, 'create'])->name('customers.create');
     Route::get('customers/{customer}', [CustomerController::class, 'show'])->name('customers.show');
+    Route::delete('customers/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
     Route::post('customers', [CustomerController::class, 'store'])->name('customers.store');
     Route::post('customers/{customer}/credit', [CustomerController::class, 'storeCredit'])->name('customers.credit');
     Route::post('customers/{customer}/payment', [CustomerController::class, 'storePayment'])->name('customers.payment');

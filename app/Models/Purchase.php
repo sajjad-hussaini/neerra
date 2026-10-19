@@ -21,7 +21,7 @@ class Purchase extends Model
 
     public function suppliers()
     {
-        return $this->belongsTo(Supplier::class, 'supplier_id', 'id');
+        return $this->belongsTo(Supplier::class, 'supplier_id', 'id')->withTrashed();
     }
     
     public function ledgers()

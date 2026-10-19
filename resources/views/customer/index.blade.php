@@ -37,7 +37,16 @@
                                 Rs. {{ number_format($customer->currentBalance()) }}
                             </strong>
                         </td>
-                        <td><a class="text-link"  href="{{ route('customers.show', $customer) }}">View →</a></td>
+                        <td>
+                            <div class="record-actions">
+                                <a class="text-link" href="{{ route('customers.show', $customer) }}">View</a>
+                                <form method="post" action="{{ route('customers.destroy', $customer) }}" onsubmit="return confirm('Delete this customer? Past sales and khata records will be kept.');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="record-delete">Delete</button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
                 @empty
                     <tr>

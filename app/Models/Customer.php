@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 // app/Models/Customer.php
 class Customer extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = ['name', 'phone', 'address', 'opening_balance'];
 
     public function sales()

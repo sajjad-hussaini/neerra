@@ -1235,6 +1235,25 @@ tfoot td {
 .summary > .discount-row[hidden] {
     display: none;
 }
+
+.record-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.record-actions form {
+    margin: 0;
+}
+
+.record-delete {
+    border: 0;
+    padding: 0;
+    background: transparent;
+    color: var(--danger);
+    font-weight: 700;
+    cursor: pointer;
+}
     .pagination svg {
     width: 20px !important;
     height: 20px !important;
